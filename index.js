@@ -15,6 +15,12 @@ httpServer.listen(3000, () => {
 });
 
 websocket.on("request", (request) => {
-  console.log("Receive a websocket request.");
+  console.log("Receive a websocket connection.");
   connection = request.accept(null, request.origin);
+
+  connection.on("close", () => console.log("Connection closed."));
+
+  connection.on("message", (message) =>
+    console.log(`message: ${message.utf8Data}`)
+  );
 });
