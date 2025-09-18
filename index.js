@@ -1,26 +1,30 @@
+const fs = require("fs");
+const url = require("url");
 const http = require("http");
+
 const WebSocketServer = require("websocket").server;
+
+// Configuration for http and websocket servers.
+const PORT = 3000;
+const STATIC_DIR = "./public";
 
 // Create simple http server to open a connection.
 const httpServer = http.createServer((req, res) => {
-  console.log("Receive a request.");
+  const parsedUrl = url.parse(req.url, true);
+
+  let filePath = STATIC_DIR + (parsedUrl.pathname === "/" ? "/index.html" : parsedUrl.pathname);
+
+  fs.readFile(filePath, (err, content) => {
+    if (err) {
+      res.writeHead(404);
+      res.end("404 - Not Found");
+    } else {
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(content);
+    }
+  });
 });
 
-// Create a websocket server to send a handshake.
-const websocket = new WebSocketServer({ httpServer });
-let connection = null;
-
-httpServer.listen(3000, () => {
-  console.log("Listening at port 3000.");
-});
-
-websocket.on("request", (request) => {
-  console.log("Receive a websocket connection.");
-  connection = request.accept(null, request.origin);
-
-  connection.on("close", () => console.log("Connection closed."));
-
-  connection.on("message", (message) =>
-    console.log(`message: ${message.utf8Data}`)
-  );
+httpServer.listen(PORT, () => {
+  console.log("Listening at port " + PORT + ".");
 });
