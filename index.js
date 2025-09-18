@@ -28,3 +28,36 @@ const httpServer = http.createServer((req, res) => {
 httpServer.listen(PORT, () => {
   console.log("Listening at port " + PORT + ".");
 });
+
+// Create a websocket server to send a handshake.
+const websocket = new WebSocketServer({ 
+  // autoAcceptConnections: false 
+  httpServer: httpServer,
+});
+
+let connections = [];
+let globalMessage = "";
+
+websocket.on("request", (request) => {
+  
+  const connection = request.accept(null, request.origin);
+  console.log("Receive a websocket connection.");
+  connection.sendUTF(globalMessage);
+  connections.push(connection);
+
+  connection.on("close", () => {
+    console.log("Connection closed.");
+    connections = connections.filter((c) => c !== connection);
+  });
+
+  connection.on("message", (message) => {
+    if (message.type === "utf8") {
+      globalMessage = message.utf8Data;
+      connections.forEach((conn) => {
+        if (conn !== connection) {
+          conn.sendUTF(message.utf8Data);
+        }
+      });
+    }
+  });
+});
