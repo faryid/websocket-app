@@ -221,6 +221,17 @@
     window.addEventListener('resize', adjustTextareaHeight);
   </script>
 
+  <script>
+    const ws = new WebSocket("ws://" + window.location.host);
+
+    const textarea = document.getElementById("note");
+
+    textarea.addEventListener("input", () => {
+      ws.send(textarea.value);
+    });
+
+    ws.onmessage = (event) => textarea.value = event.data;
+  </script>
 </body>
 
 </html>
